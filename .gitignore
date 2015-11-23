@@ -1,0 +1,17 @@
+.idea
+.project
+.settings
+.classpath
+.tern-project
+.springBeans
+*.iml
+
+
+**/generated
+target
+out
+bin
+**/*.log
+
+*.swp
+.DS_Store
