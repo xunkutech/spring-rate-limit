@@ -34,6 +34,11 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultKeyGeneratorTest {
 
+  class Tested {
+    public void withParams(final String name, final Long value) {
+    }
+  }
+
   @Mock
   private JoinPoint joinPoint;
 
@@ -61,6 +66,18 @@ public class DefaultKeyGeneratorTest {
     when(joinPoint.getSignature()).thenReturn(signature);
 
     assertThat(keyGenerator.key("", "#type", joinPoint)).isEqualTo("com.github.fzilic.spring.rate.limiting.key.DefaultKeyGeneratorTest");
+  }
+
+  @Test
+  public void shouldGenerateWithParams() throws NoSuchMethodException {
+    when(joinPoint.getTarget()).thenReturn(new Tested());
+    final MethodSignature signature = mock(MethodSignature.class);
+    when(signature.getMethod()).thenReturn(Tested.class.getMethod("withParams", String.class, Long.class));
+    when(joinPoint.getSignature()).thenReturn(signature);
+    when(joinPoint.getArgs()).thenReturn(new Object[]{"test", 10L});
+
+    assertThat(keyGenerator.key("", "#method + '-' + #p0 + '-' + #p1", joinPoint)).isEqualTo("withParams-test-10");
+
   }
 
   @Test
