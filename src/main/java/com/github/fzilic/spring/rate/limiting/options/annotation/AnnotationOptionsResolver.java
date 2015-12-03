@@ -36,14 +36,14 @@ public class AnnotationOptionsResolver implements OptionsResolver {
     }
 
     if (!rateLimited.enabled()) {
-      return AnnotationOptions.disabled();
+      return AnnotationOptions.disabled(key);
     }
 
     if (rateLimited.maxRequests() == -1 || rateLimited.interval().interval() == -1) {
       throw new IllegalConfigurationException("Annotation configuration is enabled, maxRequests and interval must be greater then 0");
     }
 
-    final AnnotationOptions options = AnnotationOptions.enabled(rateLimited.maxRequests(), AnnotationOptions.intervalOf(rateLimited.interval().interval(), rateLimited.interval().unit()));
+    final AnnotationOptions options = AnnotationOptions.enabled(key, rateLimited.maxRequests(), AnnotationOptions.intervalOf(rateLimited.interval().interval(), rateLimited.interval().unit()));
 
     // attempt to locate retry configuration
     final RateLimitedRetry retry = findAnnotation(joinPoint, RateLimitedRetry.class);

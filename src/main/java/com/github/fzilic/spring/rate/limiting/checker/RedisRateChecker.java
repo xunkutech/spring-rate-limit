@@ -48,10 +48,20 @@ public class RedisRateChecker implements RateChecker {
 
     private final OptionsInterval interval;
 
+    private final String requestId;
+
     public Callback(final String key, final Long maxRequests, final OptionsInterval interval) {
       this.key = key;
       this.maxRequests = maxRequests;
       this.interval = interval;
+      this.requestId = UUID.randomUUID().toString();
+    }
+
+    public Callback(final String key, final String requestId, final Long maxRequests, final OptionsInterval interval) {
+      this.key = key;
+      this.maxRequests = maxRequests;
+      this.interval = interval;
+      this.requestId = requestId;
     }
 
     @Override
@@ -63,10 +73,10 @@ public class RedisRateChecker implements RateChecker {
     public Boolean executeInternal(final RedisOperations<String, String> redisOperations) {
       redisOperations.multi();
       final long milliseconds = System.currentTimeMillis();
-      final String callKey = UUID.randomUUID().toString().concat("-").concat(Long.toString(milliseconds));
+      final String callKey = requestId.concat("-").concat(Long.toString(milliseconds));
 
       // remove any older then one interval
-      redisOperations.opsForZSet().removeRangeByScore(key, milliseconds, milliseconds - TimeUnit.MILLISECONDS.convert(interval.interval(), interval.unit()));
+      redisOperations.opsForZSet().removeRangeByScore(key, Double.MIN_VALUE, milliseconds - TimeUnit.MILLISECONDS.convert(interval.interval(), interval.unit()));
 
       // add current request (milliseconds should be sufficient, but add UUID)
       redisOperations.opsForZSet().add(key, callKey, milliseconds);

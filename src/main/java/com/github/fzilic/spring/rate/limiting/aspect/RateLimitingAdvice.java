@@ -19,6 +19,8 @@ package com.github.fzilic.spring.rate.limiting.aspect;
 import com.github.fzilic.spring.rate.limiting.CallBlockedException;
 import com.github.fzilic.spring.rate.limiting.RateLimitExceededException;
 import com.github.fzilic.spring.rate.limiting.RateLimited;
+import com.github.fzilic.spring.rate.limiting.analytics.NopRateLimitAnalytics;
+import com.github.fzilic.spring.rate.limiting.analytics.RateLimitAnalytics;
 import com.github.fzilic.spring.rate.limiting.checker.RateChecker;
 import com.github.fzilic.spring.rate.limiting.key.KeyGenerator;
 import com.github.fzilic.spring.rate.limiting.options.Options;
@@ -30,6 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.github.fzilic.spring.rate.limiting.util.JoinPointUtil.findAnnotation;
+import static com.github.fzilic.spring.rate.limiting.util.JoinPointUtil.methodName;
+import static com.github.fzilic.spring.rate.limiting.util.JoinPointUtil.typeName;
 
 @Aspect
 public class RateLimitingAdvice {
@@ -42,19 +46,33 @@ public class RateLimitingAdvice {
 
   private final RateChecker rateChecker;
 
+  private final RateLimitAnalytics analytics;
+
   public RateLimitingAdvice(final KeyGenerator keyGenerator, final OptionsResolver configurationResolver, final RateChecker rateChecker) {
     this.configurationResolver = configurationResolver;
     this.keyGenerator = keyGenerator;
     this.rateChecker = rateChecker;
+    this.analytics = new NopRateLimitAnalytics();
+  }
+
+  public RateLimitingAdvice(final KeyGenerator keyGenerator, final OptionsResolver configurationResolver, final RateChecker rateChecker, final RateLimitAnalytics analytics) {
+    this.configurationResolver = configurationResolver;
+    this.keyGenerator = keyGenerator;
+    this.rateChecker = rateChecker;
+    this.analytics = analytics;
   }
 
   @Around("@annotation(com.github.fzilic.spring.rate.limiting.RateLimited) || @within(com.github.fzilic.spring.rate.limiting.RateLimited)")
   public Object rateLimit(final ProceedingJoinPoint joinPoint) throws Throwable {
+    log.trace("@RateLimited attempting to execute method: {}.{}", typeName(joinPoint), methodName(joinPoint));
+
     final RateLimited rateLimited = findAnnotation(joinPoint, RateLimited.class);
     final String key = keyGenerator.key(rateLimited.key(), rateLimited.keyExpression(), joinPoint);
     final Options options = configurationResolver.resolve(key, rateLimited, joinPoint);
 
     if (options.blocked()) {
+      log.info("@RateLimited method {}.{} execution is blocked.", typeName(joinPoint), methodName(joinPoint));
+      analytics.blocked(joinPoint, rateLimited, key, options);
       throw new CallBlockedException("Execution is blocked by configuration");
     }
 
@@ -64,24 +82,35 @@ public class RateLimitingAdvice {
       Boolean canExecute;
       Integer retryCount = options.retryEnabled() ? options.retry().retryCount() + 1 : 1;
       do {
-        canExecute = rateChecker.check(key, options.maxRequests(), options.interval());
+        canExecute = rateChecker.check(options.resolvedKey(), options.maxRequests(), options.interval());
 
         if (!canExecute && options.retryEnabled()) {
+          log.trace("@RateLimited rate exceeded for method {}.{} retry enabled, retrying for {}", typeName(joinPoint),
+              methodName(joinPoint), retryCount);
           try {
             Thread.sleep(options.retry().retryInterval().unit().toMillis(options.retry().retryInterval().interval()));
           }
           catch (final InterruptedException exception) {
-            log.error("Execution retry was interrupted", exception);
+            log.error("@RateLimited execution retry was interrupted", exception);
+            analytics.retryInterrupted(joinPoint, rateLimited, key, options);
             throw new RateLimitExceededException("Interrupted while retrying", exception);
-
           }
         }
       } while (!canExecute && --retryCount > 0);
 
-
       if (!canExecute) {
+        log.warn("@RateLimited rate exceeded for method {}.{}, tires {}", typeName(joinPoint),
+            methodName(joinPoint), options.retryEnabled() ? options.retry().retryCount() + 1 : 1);
+        analytics.exceeded(joinPoint, rateLimited, key, options, options.retryEnabled() ? options.retry().retryCount() + 1 : 1 - retryCount);
         throw new RateLimitExceededException("Rate limit has been exceeded");
       }
+
+      analytics.succeeded(joinPoint, rateLimited, key, options, options.retryEnabled() ? options.retry().retryCount() + 1 : 1 - retryCount);
+    }
+    else {
+      log.info("@RateLimited method {}.{} execution is disabled.", typeName(joinPoint),
+          methodName(joinPoint));
+      analytics.disabled(joinPoint, rateLimited, key, options);
     }
 
     return joinPoint.proceed();

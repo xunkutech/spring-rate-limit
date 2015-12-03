@@ -115,6 +115,8 @@ public class AnnotationOptions implements Options {
 
   }
 
+  private String resolvedKey;
+
   private boolean retryEnabled;
 
   private boolean enabled;
@@ -125,15 +127,17 @@ public class AnnotationOptions implements Options {
 
   private OptionsRetry retry;
 
-  public static AnnotationOptions disabled() {
+  public static AnnotationOptions disabled(final String resolvedKey) {
     final AnnotationOptions options = new AnnotationOptions();
     options.enabled = false;
+    options.resolvedKey = resolvedKey;
     return options;
   }
 
-  public static AnnotationOptions enabled(final long maxRequests, final OptionsInterval interval) {
+  public static AnnotationOptions enabled(final String resolvedKey, final long maxRequests, final OptionsInterval interval) {
     final AnnotationOptions options = new AnnotationOptions();
     options.enabled = true;
+    options.resolvedKey = resolvedKey;
     options.maxRequests = maxRequests;
     options.interval = interval;
     return options;
@@ -168,6 +172,11 @@ public class AnnotationOptions implements Options {
   }
 
   @Override
+  public String resolvedKey() {
+    return resolvedKey;
+  }
+
+  @Override
   public OptionsRetry retry() {
     return retry;
   }
@@ -191,17 +200,6 @@ public class AnnotationOptions implements Options {
   }
 
   @Override
-  public int hashCode() {
-    return new HashCodeBuilder()
-        .append(retryEnabled)
-        .append(enabled)
-        .append(interval)
-        .append(maxRequests)
-        .append(retry)
-        .toHashCode();
-  }
-
-  @Override
   public boolean equals(Object obj) {
     if (obj == null) {
       return false;
@@ -214,12 +212,25 @@ public class AnnotationOptions implements Options {
     }
     AnnotationOptions rhs = (AnnotationOptions) obj;
     return new EqualsBuilder()
+        .append(this.resolvedKey, rhs.resolvedKey)
         .append(this.retryEnabled, rhs.retryEnabled)
         .append(this.enabled, rhs.enabled)
         .append(this.interval, rhs.interval)
         .append(this.maxRequests, rhs.maxRequests)
         .append(this.retry, rhs.retry)
         .isEquals();
+  }
+
+  @Override
+  public int hashCode() {
+    return new HashCodeBuilder()
+        .append(resolvedKey)
+        .append(retryEnabled)
+        .append(enabled)
+        .append(interval)
+        .append(maxRequests)
+        .append(retry)
+        .toHashCode();
   }
 
 }

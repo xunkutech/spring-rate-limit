@@ -60,6 +60,15 @@ public interface Options {
   Long maxRequests();
 
   /**
+   * Resolved key for rate limiting.
+   * Can be original value, or mapped value.
+   * Depends on {@link OptionsResolver} implementation.
+   *
+   * @return resolved key, never {@code null}
+   */
+  String resolvedKey();
+
+  /**
    * Retry options for annotated call
    * See {@link OptionsRetry}
    *

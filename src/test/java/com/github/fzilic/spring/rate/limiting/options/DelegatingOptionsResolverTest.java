@@ -89,6 +89,11 @@ public class DelegatingOptionsResolverTest {
           }
 
           @Override
+          public String resolvedKey() {
+            return null;
+          }
+
+          @Override
           public OptionsRetry retry() {
             return null;
           }

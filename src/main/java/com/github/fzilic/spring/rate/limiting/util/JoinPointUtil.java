@@ -64,7 +64,28 @@ public final class JoinPointUtil {
   }
 
   public static Class<?> type(final JoinPoint joinPoint) {
-    return joinPoint.getTarget().getClass();
+    if (joinPoint.getTarget() != null) {
+      return joinPoint.getTarget().getClass();
+    }
+
+    return null;
+  }
+
+  public static String methodName(final JoinPoint joinPoint) {
+    final Method method = method(joinPoint);
+    if (method != null) {
+      return method.getName();
+    }
+    return null;
+  }
+
+  public static String typeName(final JoinPoint joinPoint) {
+    final Class<?> type = type(joinPoint);
+
+    if (type != null) {
+      return type.getName();
+    }
+    return null;
   }
 
   private JoinPointUtil() {

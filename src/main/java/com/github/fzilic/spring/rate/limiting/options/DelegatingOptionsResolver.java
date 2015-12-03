@@ -37,6 +37,12 @@ public class DelegatingOptionsResolver implements OptionsResolver {
 
   private class DisabledOptions implements Options {
 
+    private String resolvedKey;
+
+    public DisabledOptions(final String resolvedKey) {
+      this.resolvedKey = resolvedKey;
+    }
+
     @Override
     public boolean blocked() {
       return false;
@@ -55,6 +61,11 @@ public class DelegatingOptionsResolver implements OptionsResolver {
     @Override
     public Long maxRequests() {
       return null;
+    }
+
+    @Override
+    public String resolvedKey() {
+      return resolvedKey;
     }
 
     @Override
@@ -99,7 +110,7 @@ public class DelegatingOptionsResolver implements OptionsResolver {
 
     if (CollectionUtils.isEmpty(selected)) {
       if (treatMissingAsDisabled) {
-        return new DisabledOptions();
+        return new DisabledOptions(key);
       }
       else {
         throw new AmbiguousOptionsException("No option resolver found, and treatMissingAsDisabled is false");

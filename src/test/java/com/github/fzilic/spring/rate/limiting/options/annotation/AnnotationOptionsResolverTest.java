@@ -92,7 +92,7 @@ public class AnnotationOptionsResolverTest {
 
   @Test
   public void shouldResolveCorrect() {
-    assertThat(new AnnotationOptionsResolver().resolve("test", find("correct"), joinPoint)).isEqualTo(AnnotationOptions.enabled(50, AnnotationOptions.intervalOf(10L, TimeUnit.HOURS)));
+    assertThat(new AnnotationOptionsResolver().resolve("test", find("correct"), joinPoint)).isEqualTo(AnnotationOptions.enabled("test", 50, AnnotationOptions.intervalOf(10L, TimeUnit.HOURS)));
   }
 
   @Test
@@ -101,13 +101,13 @@ public class AnnotationOptionsResolverTest {
     when(joinPoint.getTarget()).thenReturn(new Tested());
     when(methodSignature.getMethod()).thenReturn(ReflectionUtils.findMethod(Tested.class, "correctWithRetry"));
     assertThat(new AnnotationOptionsResolver().resolve("test", find("correctWithRetry"), joinPoint)).isEqualTo(AnnotationOptions
-        .enabled(5, AnnotationOptions.intervalOf(30L, TimeUnit.SECONDS))
+        .enabled("test", 5, AnnotationOptions.intervalOf(30L, TimeUnit.SECONDS))
         .enableRetry(4, AnnotationOptions.intervalOf(100L, TimeUnit.MILLISECONDS)));
   }
 
   @Test
   public void shouldResolveDisabled() {
-    assertThat(new AnnotationOptionsResolver().resolve("test", find("disabled"), joinPoint)).isEqualTo(AnnotationOptions.disabled());
+    assertThat(new AnnotationOptionsResolver().resolve("test", find("disabled"), joinPoint)).isEqualTo(AnnotationOptions.disabled("test"));
   }
 
 }

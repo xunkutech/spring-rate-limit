@@ -89,7 +89,7 @@ public class RedisRateCheckerTest {
     verify(redisOperations).exec();
     verify(redisOperations).expire(eq("test"), eq(10L), eq(TimeUnit.SECONDS));
 
-    verify(zSetOperations).removeRangeByScore(eq("test"), eq(1448037976717D), eq(1448037976717D - 10000));
+    verify(zSetOperations).removeRangeByScore(eq("test"), eq(Double.MIN_VALUE), eq(1448037976717D - 10000));
     verify(zSetOperations).add(eq("test"), eq("43f5fe42-540a-47f8-a36e-2c1b0718103e-1448037976717"), eq(1448037976717D));
     verify(zSetOperations).count(eq("test"), eq(Double.MIN_VALUE), eq(Double.MAX_VALUE));
 
@@ -145,7 +145,7 @@ public class RedisRateCheckerTest {
     verify(redisOperations).exec();
     verify(redisOperations).expire(eq("test"), eq(10L), eq(TimeUnit.SECONDS));
 
-    verify(zSetOperations).removeRangeByScore(eq("test"), eq(1448037976717D), eq(1448037976717D - 10000));
+    verify(zSetOperations).removeRangeByScore(eq("test"), eq(Double.MIN_VALUE), eq(1448037976717D - 10000));
     verify(zSetOperations).add(eq("test"), eq("43f5fe42-540a-47f8-a36e-2c1b0718103e-1448037976717"), eq(1448037976717D));
     verify(zSetOperations).count(eq("test"), eq(Double.MIN_VALUE), eq(Double.MAX_VALUE));
     verify(zSetOperations).remove(eq("test"), eq("43f5fe42-540a-47f8-a36e-2c1b0718103e-1448037976717"));
@@ -203,7 +203,7 @@ public class RedisRateCheckerTest {
     verify(redisOperations).exec();
     verify(redisOperations).expire(eq("test"), eq(10L), eq(TimeUnit.SECONDS));
 
-    verify(zSetOperations).removeRangeByScore(eq("test"), eq(1448037976717D), eq(1448037976717D - 10000));
+    verify(zSetOperations).removeRangeByScore(eq("test"), eq(Double.MIN_VALUE), eq(1448037976717D - 10000));
     verify(zSetOperations).add(eq("test"), eq("43f5fe42-540a-47f8-a36e-2c1b0718103e-1448037976717"), eq(1448037976717D));
     verify(zSetOperations).count(eq("test"), eq(Double.MIN_VALUE), eq(Double.MAX_VALUE));
 

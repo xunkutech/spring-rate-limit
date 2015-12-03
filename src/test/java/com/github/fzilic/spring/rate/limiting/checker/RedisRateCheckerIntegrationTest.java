@@ -93,8 +93,8 @@ public class RedisRateCheckerIntegrationTest {
         new RedisCallback<Object>() {
           @Override
           public Object doInRedis(final RedisConnection connection) throws DataAccessException {
-            connection.flushDb();
-            return null;
+      connection.flushDb();
+      return null;
           }
         }
     );
@@ -178,7 +178,7 @@ public class RedisRateCheckerIntegrationTest {
     // static stuff
     PowerMockito.when(System.currentTimeMillis()).thenReturn(1448037976717L);
 
-    when(interval.interval()).thenReturn(10L);
+    when(interval.interval()).thenReturn(20L);
     when(interval.unit()).thenReturn(TimeUnit.SECONDS);
 
     final RateChecker rateChecker = new RedisRateChecker(redisOperations);
@@ -195,5 +195,36 @@ public class RedisRateCheckerIntegrationTest {
     PowerMockito.verifyNoMoreInteractions(interval);
   }
 
+
+  @Test
+  public void shouldDenyAndRemove() {
+    for (int idx = 0; idx < 20; idx++) {
+      long value = 1448037976717L - (idx * 1000);
+      redisOperations.opsForZSet().add("test", UUID.randomUUID().toString().concat("-").concat(Long.toString(value)), value);
+    }
+
+    assertThat(redisOperations.opsForZSet().count("test", Double.MIN_VALUE, Double.MAX_VALUE)).isEqualTo(20);
+    PowerMockito.mockStatic(System.class);
+    final OptionsInterval interval = mock(OptionsInterval.class);
+
+    // static stuff
+    PowerMockito.when(System.currentTimeMillis()).thenReturn(1448037976717L);
+
+    when(interval.interval()).thenReturn(10L);
+    when(interval.unit()).thenReturn(TimeUnit.SECONDS);
+
+    final RateChecker rateChecker = new RedisRateChecker(redisOperations);
+
+    assertThat(rateChecker.check("test", 10L, interval)).isFalse();
+
+    PowerMockito.verifyStatic();
+    System.currentTimeMillis();
+
+    verify(interval, times(2)).interval();
+    verify(interval, times(2)).unit();
+
+    assertThat(redisOperations.opsForZSet().count("test", Double.MIN_VALUE, Double.MAX_VALUE)).isEqualTo(10);
+    PowerMockito.verifyNoMoreInteractions(interval);
+  }
 
 }
