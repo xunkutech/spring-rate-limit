@@ -56,7 +56,7 @@ public class DefaultKeyGenerator implements KeyGenerator {
       context.setVariable("method", method(joinPoint).getName());
 
       final Object[] args = joinPoint.getArgs();
-      if (args != null && args.length > 0) {
+      if (args != null) {
         for (int idx = 0; idx < args.length; idx++) {
           context.setVariable(String.format("p%d", idx), args[idx]);
         }
