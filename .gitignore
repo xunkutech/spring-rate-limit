@@ -1,4 +1,7 @@
-.idea
+.idea/
+!.idea/codeStyleSettings.xml
+!.idea/copyright/*
+
 .project
 .settings
 .classpath
@@ -8,7 +11,7 @@
 
 
 **/generated
-target
+target/
 out
 bin
 **/*.log
