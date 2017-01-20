@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
 /**
  * Marker for retry configuration
  * <p/>
- * Used only if {@link RateLimited#configuration()} is set to {@link RateLimited.Configuration#ANNOTATION}
  *
  * @author franjozilic
  */

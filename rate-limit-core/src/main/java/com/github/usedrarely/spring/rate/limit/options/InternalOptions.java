@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Franjo Žilić <frenky666@gmail.com>
+ * Copyright (c) 2017 Franjo Žilić <frenky666@gmail.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,16 +15,14 @@
  *
  */
 
-package com.github.usedrarely.spring.rate.limit.options.annotation;
+package com.github.usedrarely.spring.rate.limit.options;
 
-import com.github.usedrarely.spring.rate.limit.options.Options;
-import com.github.usedrarely.spring.rate.limit.options.OptionsInterval;
-import com.github.usedrarely.spring.rate.limit.options.OptionsRetry;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
-public class AnnotationOptions implements Options {
+public class InternalOptions implements Options {
 
   protected static class InternalInterval implements OptionsInterval {
 
@@ -51,6 +49,15 @@ public class AnnotationOptions implements Options {
     }
 
     @Override
+    public String toString() {
+      return new ToStringBuilder(this)
+          .append("interval", interval)
+          .append("unit", unit)
+          .toString();
+    }
+
+
+    @Override
     public boolean equals(Object obj) {
       if (obj == null) {
         return false;
@@ -67,7 +74,6 @@ public class AnnotationOptions implements Options {
           .append(this.unit, rhs.unit)
           .isEquals();
     }
-
 
   }
 
@@ -113,6 +119,13 @@ public class AnnotationOptions implements Options {
           .toHashCode();
     }
 
+    @Override
+    public String toString() {
+      return new ToStringBuilder(this)
+          .append("retryCount", retryCount)
+          .append("interval", interval)
+          .toString();
+    }
   }
 
   private String resolvedKey;
@@ -127,15 +140,15 @@ public class AnnotationOptions implements Options {
 
   private OptionsRetry retry;
 
-  public static AnnotationOptions disabled(final String resolvedKey) {
-    final AnnotationOptions options = new AnnotationOptions();
+  public static InternalOptions disabled(final String resolvedKey) {
+    final InternalOptions options = new InternalOptions();
     options.enabled = false;
     options.resolvedKey = resolvedKey;
     return options;
   }
 
-  public static AnnotationOptions enabled(final String resolvedKey, final long maxRequests, final OptionsInterval interval) {
-    final AnnotationOptions options = new AnnotationOptions();
+  public static InternalOptions enabled(final String resolvedKey, final long maxRequests, final OptionsInterval interval) {
+    final InternalOptions options = new InternalOptions();
     options.enabled = true;
     options.resolvedKey = resolvedKey;
     options.maxRequests = maxRequests;
@@ -186,7 +199,7 @@ public class AnnotationOptions implements Options {
     return retryEnabled;
   }
 
-  public AnnotationOptions enableRetry(final Integer retryCount, OptionsInterval interval) {
+  public InternalOptions enableRetry(final Integer retryCount, OptionsInterval interval) {
     this.retryEnabled = true;
     this.retry = retryOf(retryCount, interval);
     return this;
@@ -207,10 +220,10 @@ public class AnnotationOptions implements Options {
     if (obj == this) {
       return true;
     }
-    if (!(obj instanceof AnnotationOptions)) {
+    if (!(obj instanceof InternalOptions)) {
       return false;
     }
-    AnnotationOptions rhs = (AnnotationOptions) obj;
+    InternalOptions rhs = (InternalOptions) obj;
     return new EqualsBuilder()
         .append(this.resolvedKey, rhs.resolvedKey)
         .append(this.retryEnabled, rhs.retryEnabled)
@@ -233,4 +246,15 @@ public class AnnotationOptions implements Options {
         .toHashCode();
   }
 
+  @Override
+  public String toString() {
+    return new ToStringBuilder(this)
+        .append("resolvedKey", resolvedKey)
+        .append("enabled", enabled)
+        .append("maxRequests", maxRequests)
+        .append("interval", interval)
+        .append("retryEnabled", retryEnabled)
+        .append("retry", retry)
+        .toString();
+  }
 }

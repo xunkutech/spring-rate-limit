@@ -68,7 +68,7 @@ public class RateLimitingAdvice {
 
     final RateLimited rateLimited = findAnnotation(joinPoint, RateLimited.class);
     final String key = keyGenerator.key(rateLimited.key(), rateLimited.keyExpression(), joinPoint);
-    final Options options = configurationResolver.resolve(key, rateLimited, joinPoint);
+    final Options options = configurationResolver.resolve(key, joinPoint);
 
     if (options.blocked()) {
       log.info("@RateLimited method {}.{} execution is blocked.", typeName(joinPoint), methodName(joinPoint));
@@ -108,8 +108,7 @@ public class RateLimitingAdvice {
       analytics.succeeded(joinPoint, rateLimited, key, options, options.retryEnabled() ? options.retry().retryCount() + 1 : 1 - retryCount);
     }
     else {
-      log.info("@RateLimited method {}.{} execution is disabled.", typeName(joinPoint),
-          methodName(joinPoint));
+      log.info("@RateLimited method {}.{} execution is disabled.", typeName(joinPoint), methodName(joinPoint));
       analytics.disabled(joinPoint, rateLimited, key, options);
     }
 

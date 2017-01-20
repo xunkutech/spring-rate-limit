@@ -25,11 +25,11 @@ import com.github.usedrarely.spring.rate.limit.checker.RateChecker;
 import com.github.usedrarely.spring.rate.limit.exception.CallBlockedException;
 import com.github.usedrarely.spring.rate.limit.exception.RateLimitExceededException;
 import com.github.usedrarely.spring.rate.limit.key.DefaultKeyGenerator;
+import com.github.usedrarely.spring.rate.limit.options.AnnotationOptionsResolver;
+import com.github.usedrarely.spring.rate.limit.options.InternalOptions;
 import com.github.usedrarely.spring.rate.limit.options.Options;
 import com.github.usedrarely.spring.rate.limit.options.OptionsInterval;
 import com.github.usedrarely.spring.rate.limit.options.OptionsResolver;
-import com.github.usedrarely.spring.rate.limit.options.annotation.AnnotationOptions;
-import com.github.usedrarely.spring.rate.limit.options.annotation.AnnotationOptionsResolver;
 import java.util.concurrent.TimeUnit;
 import org.aspectj.lang.JoinPoint;
 import org.junit.Before;
@@ -92,7 +92,7 @@ public class RateLimitingAdviceTest {
     proxyFactory.addAspect(new RateLimitingAdvice(new DefaultKeyGenerator(), new AnnotationOptionsResolver(), rateChecker));
     final LimitedInterface limited = proxyFactory.getProxy();
 
-    final OptionsInterval value = AnnotationOptions.intervalOf(1L, TimeUnit.MINUTES);
+    final OptionsInterval value = InternalOptions.intervalOf(1L, TimeUnit.MINUTES);
     when(rateChecker.check(eq("test"), eq(10L), eq(value))).thenReturn(true);
     limited.aMethod();
     verify(rateChecker).check(eq("test"), eq(10L), eq(value));
@@ -104,7 +104,7 @@ public class RateLimitingAdviceTest {
     proxyFactory.addAspect(new RateLimitingAdvice(new DefaultKeyGenerator(), new AnnotationOptionsResolver(), rateChecker));
     final LimitedInterface limited = proxyFactory.getProxy();
 
-    final OptionsInterval value = AnnotationOptions.intervalOf(1L, TimeUnit.MINUTES);
+    final OptionsInterval value = InternalOptions.intervalOf(1L, TimeUnit.MINUTES);
     when(rateChecker.check(eq("test"), eq(10L), eq(value))).thenReturn(false, false, true);
     limited.bMethod();
     verify(rateChecker, times(3)).check(eq("test"), eq(10L), eq(value));
@@ -119,8 +119,8 @@ public class RateLimitingAdviceTest {
     final LimitedInterface limited = proxyFactory.getProxy();
 
     final Options options = mock(Options.class);
-    when(optionsResolver.supports(eq("blocked"), any(RateLimited.class))).thenReturn(true);
-    when(optionsResolver.resolve(eq("blocked"), any(RateLimited.class), any(JoinPoint.class))).thenReturn(options);
+    when(optionsResolver.supports(eq("blocked"))).thenReturn(true);
+    when(optionsResolver.resolve(eq("blocked"), any(JoinPoint.class))).thenReturn(options);
     when(options.blocked()).thenReturn(true);
 
     limited.cMethod();
@@ -132,7 +132,7 @@ public class RateLimitingAdviceTest {
     proxyFactory.addAspect(new RateLimitingAdvice(new DefaultKeyGenerator(), new AnnotationOptionsResolver(), rateChecker));
     final LimitedInterface limited = proxyFactory.getProxy();
 
-    final OptionsInterval value = AnnotationOptions.intervalOf(1L, TimeUnit.MINUTES);
+    final OptionsInterval value = InternalOptions.intervalOf(1L, TimeUnit.MINUTES);
     when(rateChecker.check(eq("test"), eq(10L), eq(value))).thenReturn(false);
     limited.aMethod();
     verify(rateChecker).check(eq("test"), eq(10L), eq(value));
@@ -144,7 +144,7 @@ public class RateLimitingAdviceTest {
     proxyFactory.addAspect(new RateLimitingAdvice(new DefaultKeyGenerator(), new AnnotationOptionsResolver(), rateChecker));
     final LimitedInterface limited = proxyFactory.getProxy();
 
-    final OptionsInterval value = AnnotationOptions.intervalOf(1L, TimeUnit.MINUTES);
+    final OptionsInterval value = InternalOptions.intervalOf(1L, TimeUnit.MINUTES);
     when(rateChecker.check(eq("test"), eq(10L), eq(value))).thenReturn(false, false, false, true);
     limited.bMethod();
     verify(rateChecker, times(3)).check(eq("test"), eq(10L), eq(value));

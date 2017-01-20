@@ -95,11 +95,16 @@ public class DelegatingOptionsResolver implements OptionsResolver {
   }
 
   @Override
-  public Options resolve(final String key, final RateLimited rateLimited, final JoinPoint joinPoint) throws OptionsException {
+  public boolean isDynamic() {
+    return true;
+  }
+
+  @Override
+  public Options resolve(final String key, final JoinPoint joinPoint) throws OptionsException {
     final List<OptionsResolver> selected = new ArrayList<>();
 
     for (final OptionsResolver resolver : resolvers) {
-      if (resolver.supports(key, rateLimited)) {
+      if (resolver.supports(key)) {
         selected.add(resolver);
       }
     }
@@ -117,11 +122,11 @@ public class DelegatingOptionsResolver implements OptionsResolver {
       }
     }
 
-    return selected.get(0).resolve(key, rateLimited, joinPoint);
+    return selected.get(0).resolve(key, joinPoint);
   }
 
   @Override
-  public boolean supports(final String key, final RateLimited rateLimited) {
+  public boolean supports(final String key) {
     return true;
   }
 }

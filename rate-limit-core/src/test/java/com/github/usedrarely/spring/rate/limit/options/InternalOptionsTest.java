@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Franjo Žilić <frenky666@gmail.com>
+ * Copyright (c) 2017 Franjo Žilić <frenky666@gmail.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,25 +15,25 @@
  *
  */
 
-package com.github.usedrarely.spring.rate.limit.options.annotation;
+package com.github.usedrarely.spring.rate.limit.options;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 import org.junit.Test;
 
-public class AnnotationOptionsTest {
+public class InternalOptionsTest {
 
   @Test
   public void getCoverageHigher() {
-    EqualsVerifier.forClass(AnnotationOptions.class)
+    EqualsVerifier.forClass(InternalOptions.class)
         .suppress(Warning.NONFINAL_FIELDS, Warning.STRICT_INHERITANCE)
         .verify();
 
-    EqualsVerifier.forClass(AnnotationOptions.InternalInterval.class)
+    EqualsVerifier.forClass(InternalOptions.InternalInterval.class)
         .suppress(Warning.NONFINAL_FIELDS, Warning.STRICT_INHERITANCE)
         .verify();
 
-    EqualsVerifier.forClass(AnnotationOptions.InternalRetry.class)
+    EqualsVerifier.forClass(InternalOptions.InternalRetry.class)
         .suppress(Warning.NONFINAL_FIELDS, Warning.STRICT_INHERITANCE)
         .verify();
 

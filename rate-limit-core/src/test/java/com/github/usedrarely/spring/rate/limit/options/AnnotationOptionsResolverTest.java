@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Franjo Žilić <frenky666@gmail.com>
+ * Copyright (c) 2017 Franjo Žilić <frenky666@gmail.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,7 +15,7 @@
  *
  */
 
-package com.github.usedrarely.spring.rate.limit.options.annotation;
+package com.github.usedrarely.spring.rate.limit.options;
 
 import com.github.usedrarely.spring.rate.limit.Interval;
 import com.github.usedrarely.spring.rate.limit.RateLimited;
@@ -60,9 +60,6 @@ public class AnnotationOptionsResolverTest {
     public void invalidInterval() {
     }
 
-    @RateLimited(configuration = RateLimited.Configuration.DATABASE)
-    public void unsupported() {
-    }
   }
 
   @Mock
@@ -71,6 +68,10 @@ public class AnnotationOptionsResolverTest {
   @Mock
   private MethodSignature methodSignature;
 
+  private RateLimited find(final String methodName) {
+    return AnnotationUtils.findAnnotation(ClassUtils.getMethod(Tested.class, methodName), RateLimited.class);
+  }
+
   @Before
   public void setUp() {
     reset(joinPoint);
@@ -78,36 +79,34 @@ public class AnnotationOptionsResolverTest {
 
   @Test(expected = IllegalConfigurationException.class)
   public void shouldFailForIllegalConfiguration() {
-    new AnnotationOptionsResolver().resolve("test", find("invalidInterval"), joinPoint);
+    initMocks("invalidInterval");
+    new AnnotationOptionsResolver().resolve("test", joinPoint);
   }
 
-  private RateLimited find(final String methodName) {
-    return AnnotationUtils.findAnnotation(ClassUtils.getMethod(Tested.class, methodName), RateLimited.class);
-  }
-
-  @Test(expected = IllegalConfigurationException.class)
-  public void shouldFailForUnsupported() {
-    new AnnotationOptionsResolver().resolve("test", find("unsupported"), joinPoint);
+  private void initMocks(final String method) {
+    when(joinPoint.getSignature()).thenReturn(methodSignature);
+    when(joinPoint.getTarget()).thenReturn(new Tested());
+    when(methodSignature.getMethod()).thenReturn(ReflectionUtils.findMethod(Tested.class, method));
   }
 
   @Test
   public void shouldResolveCorrect() {
-    assertThat(new AnnotationOptionsResolver().resolve("test", find("correct"), joinPoint)).isEqualTo(AnnotationOptions.enabled("test", 50, AnnotationOptions.intervalOf(10L, TimeUnit.HOURS)));
+    initMocks("correct");
+    assertThat(new AnnotationOptionsResolver().resolve("test", joinPoint)).isEqualTo(InternalOptions.enabled("test", 50, InternalOptions.intervalOf(10L, TimeUnit.HOURS)));
   }
 
   @Test
   public void shouldResolveCorrectWithRetry() {
-    when(joinPoint.getSignature()).thenReturn(methodSignature);
-    when(joinPoint.getTarget()).thenReturn(new Tested());
-    when(methodSignature.getMethod()).thenReturn(ReflectionUtils.findMethod(Tested.class, "correctWithRetry"));
-    assertThat(new AnnotationOptionsResolver().resolve("test", find("correctWithRetry"), joinPoint)).isEqualTo(AnnotationOptions
-        .enabled("test", 5, AnnotationOptions.intervalOf(30L, TimeUnit.SECONDS))
-        .enableRetry(4, AnnotationOptions.intervalOf(100L, TimeUnit.MILLISECONDS)));
+    initMocks("correctWithRetry");
+    assertThat(new AnnotationOptionsResolver().resolve("test", joinPoint)).isEqualTo(InternalOptions
+        .enabled("test", 5, InternalOptions.intervalOf(30L, TimeUnit.SECONDS))
+        .enableRetry(4, InternalOptions.intervalOf(100L, TimeUnit.MILLISECONDS)));
   }
 
   @Test
   public void shouldResolveDisabled() {
-    assertThat(new AnnotationOptionsResolver().resolve("test", find("disabled"), joinPoint)).isEqualTo(AnnotationOptions.disabled("test"));
+    initMocks("disabled");
+    assertThat(new AnnotationOptionsResolver().resolve("test", joinPoint)).isEqualTo(InternalOptions.disabled("test"));
   }
 
 }

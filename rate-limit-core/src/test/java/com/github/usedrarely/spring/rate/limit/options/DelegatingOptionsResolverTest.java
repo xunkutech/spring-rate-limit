@@ -40,33 +40,43 @@ public class DelegatingOptionsResolverTest {
     }
   }
 
+  private RateLimited find(final String methodName) {
+    return AnnotationUtils.findAnnotation(ClassUtils.getMethod(Tested.class, methodName), RateLimited.class);
+  }
+
   @Test
   public void shouldDisableMissing() {
     final List<OptionsResolver> objects = Collections.emptyList();
     assertThat(new DelegatingOptionsResolver(objects, true)
-        .resolve("test", find("aMethod"), mock(JoinPoint.class)).enabled())
+        .resolve("test", mock(JoinPoint.class)).enabled())
         .isFalse();
-  }
-
-  private RateLimited find(final String methodName) {
-    return AnnotationUtils.findAnnotation(ClassUtils.getMethod(Tested.class, methodName), RateLimited.class);
   }
 
   @Test
   public void shouldResolve() {
     final Options resolve = new DelegatingOptionsResolver(Arrays.asList(new OptionsResolver() {
       @Override
-      public Options resolve(final String key, final RateLimited rateLimited, final JoinPoint joinPoint) throws OptionsException {
+      public boolean isDynamic() {
+        return false;
+      }
+
+      @Override
+      public Options resolve(final String key, final JoinPoint joinPoint) throws OptionsException {
         return null;
       }
 
       @Override
-      public boolean supports(final String key, final RateLimited rateLimited) {
+      public boolean supports(final String key) {
         return false;
       }
     }, new OptionsResolver() {
       @Override
-      public Options resolve(final String key, final RateLimited rateLimited, final JoinPoint joinPoint) throws OptionsException {
+      public boolean isDynamic() {
+        return false;
+      }
+
+      @Override
+      public Options resolve(final String key, final JoinPoint joinPoint) throws OptionsException {
         return new Options() {
           @Override
           public boolean blocked() {
@@ -106,11 +116,11 @@ public class DelegatingOptionsResolverTest {
       }
 
       @Override
-      public boolean supports(final String key, final RateLimited rateLimited) {
+      public boolean supports(final String key) {
         return true;
       }
     }))
-        .resolve("test", find("aMethod"), mock(JoinPoint.class));
+        .resolve("test", mock(JoinPoint.class));
     assertThat(resolve).isNotNull();
     assertThat(resolve.enabled()).isTrue();
     assertThat(resolve.maxRequests()).isEqualTo(15L);
@@ -120,33 +130,43 @@ public class DelegatingOptionsResolverTest {
   public void shouldThrowExceptionIfMoreThenOne() {
     new DelegatingOptionsResolver(Arrays.asList(new OptionsResolver() {
       @Override
-      public Options resolve(final String key, final RateLimited rateLimited, final JoinPoint joinPoint) throws OptionsException {
+      public boolean isDynamic() {
+        return false;
+      }
+
+      @Override
+      public Options resolve(final String key, final JoinPoint joinPoint) throws OptionsException {
         return null;
       }
 
       @Override
-      public boolean supports(final String key, final RateLimited rateLimited) {
+      public boolean supports(final String key) {
         return true;
       }
     }, new OptionsResolver() {
       @Override
-      public Options resolve(final String key, final RateLimited rateLimited, final JoinPoint joinPoint) throws OptionsException {
+      public boolean isDynamic() {
+        return false;
+      }
+
+      @Override
+      public Options resolve(final String key, final JoinPoint joinPoint) throws OptionsException {
         return null;
       }
 
       @Override
-      public boolean supports(final String key, final RateLimited rateLimited) {
+      public boolean supports(final String key) {
         return true;
       }
     }))
-        .resolve("test", find("aMethod"), mock(JoinPoint.class));
+        .resolve("test", mock(JoinPoint.class));
   }
 
   @Test(expected = AmbiguousOptionsException.class)
   public void shouldThrowExceptionOnMissing() {
     final List<OptionsResolver> objects = Collections.emptyList();
     new DelegatingOptionsResolver(objects)
-        .resolve("test", find("aMethod"), mock(JoinPoint.class));
+        .resolve("test", mock(JoinPoint.class));
   }
 
 }

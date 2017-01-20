@@ -102,19 +102,17 @@ public class RateLimitingAdvicePointcutTest {
     final Options mock = mock(Options.class);
     when(mock.enabled()).thenReturn(true);
     when(mock.retryEnabled()).thenReturn(false);
-    when(configurationResolver.resolve(anyString(), any(RateLimited.class), any(JoinPoint.class))).thenReturn(mock);
+    when(configurationResolver.resolve(anyString(), any(JoinPoint.class))).thenReturn(mock);
 
     test.aMethod();
     test.bMethod();
 
     final ArgumentCaptor<JoinPoint> joinPointCaptor = ArgumentCaptor.forClass(JoinPoint.class);
-    final ArgumentCaptor<RateLimited> rateLimitedCaptor = ArgumentCaptor.forClass(RateLimited.class);
 
-    verify(configurationResolver, times(1)).resolve(anyString(), rateLimitedCaptor.capture(), joinPointCaptor.capture());
+    verify(configurationResolver, times(1)).resolve(anyString(), joinPointCaptor.capture());
     verifyNoMoreInteractions(configurationResolver);
 
     assertThat(joinPointCaptor.getAllValues()).hasSize(1);
-    assertThat(rateLimitedCaptor.getAllValues()).hasSize(1);
     assertThat(joinPointCaptor.getAllValues().get(0)).isNotNull();
     assertThat(joinPointCaptor.getAllValues().get(0)).isInstanceOf(ProceedingJoinPoint.class);
     assertThat(joinPointCaptor.getAllValues().get(0).getSignature().getName()).isEqualTo("aMethod");
@@ -134,52 +132,20 @@ public class RateLimitingAdvicePointcutTest {
 
     final Options mock = mock(Options.class);
     when(mock.enabled()).thenReturn(true);
-    when(configurationResolver.resolve(anyString(), any(RateLimited.class), any(JoinPoint.class))).thenReturn(mock);
+    when(configurationResolver.resolve(anyString(), any(JoinPoint.class))).thenReturn(mock);
 
     test.aMethod();
     test.bMethod();
 
     final ArgumentCaptor<JoinPoint> joinPointCaptor = ArgumentCaptor.forClass(JoinPoint.class);
-    final ArgumentCaptor<RateLimited> rateLimitedCaptor = ArgumentCaptor.forClass(RateLimited.class);
 
-    verify(configurationResolver, times(2)).resolve(anyString(), rateLimitedCaptor.capture(), joinPointCaptor.capture());
+    verify(configurationResolver, times(2)).resolve(anyString(), joinPointCaptor.capture());
     verifyNoMoreInteractions(configurationResolver);
 
     assertThat(joinPointCaptor.getAllValues()).hasSize(2);
-    assertThat(rateLimitedCaptor.getAllValues()).hasSize(2);
     assertThat(joinPointCaptor.getAllValues().get(0).getSignature().getName()).isEqualTo("aMethod");
     assertThat(joinPointCaptor.getAllValues().get(1).getSignature().getName()).isEqualTo("bMethod");
 
   }
 
-  @Test
-  public void shouldResolveCorrectAnnotation() {
-    final OptionsResolver configurationResolver = mock(OptionsResolver.class);
-
-    final AspectJProxyFactory proxyFactory = new AspectJProxyFactory(new LimitedTypeAndMethodLevel());
-    final KeyGenerator keyGenerator = mock(KeyGenerator.class);
-    when(keyGenerator.key(anyString(), anyString(), any(JoinPoint.class))).thenReturn("key");
-    final RateChecker rateChecker = mock(RateChecker.class);
-    when(rateChecker.check(anyString(), anyLong(), any(OptionsInterval.class))).thenReturn(true);
-    proxyFactory.addAspect(new RateLimitingAdvice(keyGenerator, configurationResolver, rateChecker));
-    final LimitedInterface test = proxyFactory.getProxy();
-
-    final Options mock = mock(Options.class);
-    when(mock.enabled()).thenReturn(true);
-    when(configurationResolver.resolve(anyString(), any(RateLimited.class), any(JoinPoint.class))).thenReturn(mock);
-
-    test.aMethod();
-    test.bMethod();
-
-    final ArgumentCaptor<JoinPoint> joinPointCaptor = ArgumentCaptor.forClass(JoinPoint.class);
-    final ArgumentCaptor<RateLimited> rateLimitedCaptor = ArgumentCaptor.forClass(RateLimited.class);
-
-    verify(configurationResolver, times(2)).resolve(anyString(), rateLimitedCaptor.capture(), joinPointCaptor.capture());
-    verifyNoMoreInteractions(configurationResolver);
-
-    assertThat(joinPointCaptor.getAllValues()).hasSize(2);
-    assertThat(rateLimitedCaptor.getAllValues()).hasSize(2);
-    assertThat(rateLimitedCaptor.getAllValues().get(0).interval().unit()).isEqualTo(TimeUnit.DAYS);
-    assertThat(rateLimitedCaptor.getAllValues().get(1).interval().unit()).isEqualTo(TimeUnit.MINUTES);
-  }
 }
