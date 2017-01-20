@@ -28,10 +28,10 @@ import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.util.CollectionUtils;
 
 /**
- * Rate limit checker implemented using Redis.
+ * Rate limit checker implemented using Redis.<br>
  * Designed for use in distributed systems with no inter node synchronization.
  * <p/>
- * Implementation is based on algorithm described by https://engineering.classdojo.com/blog/2015/02/06/rolling-rate-limiter/
+ * Implementation is based on algorithm described by <a href="https://engineering.classdojo.com/blog/2015/02/06/rolling-rate-limiter/">https://engineering.classdojo.com/blog/2015/02/06/rolling-rate-limiter/</a><br>
  * This implementation doesn't include checking maximum time between two requests, and is more relaxed then original.
  * <p/>
  * There is a possible race condition, but only downside is that some executions will be blocked.
@@ -71,7 +71,7 @@ public class RedisRateChecker implements RateChecker {
       return executeInternal((RedisOperations<String, String>) redisOperations);
     }
 
-    public Boolean executeInternal(final RedisOperations<String, String> redisOperations) {
+    private Boolean executeInternal(final RedisOperations<String, String> redisOperations) {
       redisOperations.multi();
       final long milliseconds = System.currentTimeMillis();
       final String callKey = requestId.concat("-").concat(Long.toString(milliseconds));
